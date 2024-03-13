@@ -1,0 +1,203 @@
+---
+import { eq } from "astro:db";
+import { db, Users } from "astro:db";
+
+const users = await db.select().from(Users);
+
+const addUser = async (name: string, id: number) => {
+	try {
+		await db.insert(Users).values({
+			firstName: name as string,
+			idUsers: id as unknown as number,
+		});
+		console.log("Add user berhasil");
+	} catch (error) {
+		console.log("error nih", error);
+	}
+};
+
+const updateUser = async (name: string, id: number) => {
+	try {
+		await db.update(Users).set({idUsers: id,firstName: name}).where(eq(Users.idUsers,id));
+		console.log("Update user berhasil");
+	} catch (error) {
+		console.log("error nih", error);
+	}
+};
+
+const deleteUser = async (id:number)=>{
+	try {
+		await db.delete(Users).where(eq(Users.idUsers,id));
+	} catch (error) {
+		console.log("error nih", error);
+	}
+}
+
+if (Astro.request.method === "POST") {
+	try {
+		const formData = await Astro.request.formData();
+		const method = formData.get("method");
+		if (method === "add") {
+			const name = formData.get("name");
+			addUser(name as string, null);
+			return Astro.redirect("/");
+		}
+		if (method === "update") {
+			const name = formData.get("name");
+			const id = formData.get("id");
+			updateUser(name as string,id as unknown as number)
+			return Astro.redirect("/");
+		}
+
+		if (method === "delete") {
+			const id = formData.get("id");
+			deleteUser(id as unknown as number);
+			return Astro.redirect("/");
+		}
+		
+	} catch (error) {
+		console.log(error);
+	}
+}
+
+---
+
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+		<meta name="viewport" content="width=device-width" />
+		<meta name="generator" content={Astro.generator} />
+		<title>Astro</title>
+	</head>
+	<body>
+		<div class="flex justify-center items-center h-screen">
+			<div class="overflow-x-auto">
+				<table class="table">
+					<thead>
+						<tr>
+							<th>Id</th>
+							<th>Name</th>
+							<th class="text-center">Action</th>
+							<th
+								><div>
+									<button
+										class="btn btn-primary"
+										onclick="my_modal_add.showModal()"
+										>Add +</button
+									>
+									<dialog id="my_modal_add" class="modal">
+										<div class="modal-box">
+											<form method="dialog">
+												<button
+													class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2"
+													>✕</button
+												>
+											</form>
+											<form
+												method="post"
+												class="flex flex-col gap-4"
+											>
+												<input
+													type="hidden"
+													name="method"
+													value="add"
+												/>
+												<input
+													type="number"
+													placeholder="Id Users"
+													class="input input-bordered w-full max-w-xs"
+													name="id"
+												/>
+												<input
+													type="text"
+													placeholder="Firstname"
+													class="input input-bordered w-full max-w-xs"
+													name="name"
+												/>
+												<button class="btn btn-primary"
+													>Add</button
+												>
+											</form>
+										</div>
+									</dialog>
+								</div>
+							</th>
+						</tr>
+					</thead>
+					<tbody>
+						{
+							users.map((user) => {
+								return (
+									<tr>
+										<th>{user.idUsers}</th>
+										<td>{user.firstName}</td>
+										<td class="flex gap-2">
+											<div>
+												<button
+													class="btn btn-warning"
+													onclick=`my_modal_${user.idUsers}.showModal()`
+												>
+													Update
+												</button>
+												<dialog
+													id=`my_modal_${user.idUsers}`
+													class="modal"
+												>
+													<div class="modal-box">
+														<form method="dialog">
+															<button class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">
+																✕
+															</button>
+														</form>
+														<form
+															method="post"
+															class="flex flex-col gap-4"
+														>
+															<input
+																type="hidden"
+																name="method"
+																value="update"
+															/>
+															<input
+																type="number"
+																placeholder="Id Users"
+																class="input input-bordered w-full max-w-xs"
+																name="id"
+																value={user.idUsers}
+															/>
+															<input
+																type="text"
+																placeholder="Firstname"
+																class="input input-bordered w-full max-w-xs"
+																name="name"
+																value={user.firstName}
+															/>
+															<button class="btn btn-primary">
+																Update
+															</button>
+														</form>
+													</div>
+												</dialog>
+											</div>
+											<form method="post">
+												<input type="hidden" name="method" value="delete"/>
+												<input type="hidden" name="id" value={user.idUsers}/>
+												<button class="btn btn-error">Delete</button>
+												</form>
+										</td>
+									</tr>
+								);
+							})
+						}
+					</tbody>
+				</table>
+			</div>
+		</div>
+		<script is:inline>
+			document
+				.querySelector("form")
+				.addEventListener("submit", (e) => e.preventDefault());
+		</script>
+	</body>
+</html>
