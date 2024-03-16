@@ -1,0 +1,19 @@
+---
+import { db, user } from "astro:db";
+const users = await db.select().from(user);
+
+console.log(users);
+---
+
+<html lang="en">
+    <body>
+        <h1>Sign up</h1>
+        <form method="post" action="/api/register">
+            <label for="username">Username</label>
+            <input id="username" name="username" />
+            <label for="password">Password</label>
+            <input id="password" name="password" />
+            <button>Continue</button>
+        </form>
+    </body>
+</html>

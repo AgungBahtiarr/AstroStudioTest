@@ -1,12 +1,20 @@
 ---
-import { eq } from "astro:db";
-import { db, Users } from "astro:db";
+import { db, Childs, eq  } from "astro:db";
 
-const users = await db.select().from(Users);
+
+const user = Astro.locals.user;
+if (!user) {
+	return Astro.redirect("/login");
+}
+
+const username = user.username;
+
+
+const users = await db.select().from(Childs);
 
 const addUser = async (name: string, id: number) => {
 	try {
-		await db.insert(Users).values({
+		await db.insert(Childs).values({
 			firstName: name as string,
 			idUsers: id as unknown as number,
 		});
@@ -18,7 +26,7 @@ const addUser = async (name: string, id: number) => {
 
 const updateUser = async (name: string, id: number) => {
 	try {
-		await db.update(Users).set({idUsers: id,firstName: name}).where(eq(Users.idUsers,id));
+		await db.update(Childs).set({idUsers: id,firstName: name}).where(eq(Childs.idUsers,id));
 		console.log("Update user berhasil");
 	} catch (error) {
 		console.log("error nih", error);
@@ -27,7 +35,7 @@ const updateUser = async (name: string, id: number) => {
 
 const deleteUser = async (id:number)=>{
 	try {
-		await db.delete(Users).where(eq(Users.idUsers,id));
+		await db.delete(Childs).where(eq(Childs.idUsers,id));
 	} catch (error) {
 		console.log("error nih", error);
 	}
@@ -122,6 +130,11 @@ if (Astro.request.method === "POST") {
 										</div>
 									</dialog>
 								</div>
+							</th>
+							<th>
+								<form method="post" action="/api/logout">
+								<button class="btn btn-error">Sign out</button>
+							</form>
 							</th>
 						</tr>
 					</thead>
